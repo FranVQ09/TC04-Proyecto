@@ -11,10 +11,21 @@ def load_json(filename):
         return json.load(f)
     
 def build_dataset(seasons=[2022, 2023, 2024, 2025]):
+    # Movemos la declaración de data fuera del bucle para acumular todas las temporadas
     data = []
 
     for season in seasons:
         print(f"Processing season {season}...")
+        
+        # Verificamos si los archivos existen antes de cargarlos
+        if not os.path.exists(os.path.join(RAW_PATH, f"results_{season}.json")):
+            print(f"Archivo results_{season}.json no encontrado. Saltando temporada {season}.")
+            continue
+            
+        if not os.path.exists(os.path.join(RAW_PATH, f"standings_{season}.json")):
+            print(f"Archivo standings_{season}.json no encontrado. Saltando temporada {season}.")
+            continue
+            
         results_json = load_json(f"results_{season}.json")
         standings_json = load_json(f"standings_{season}.json")
 
@@ -37,7 +48,7 @@ def build_dataset(seasons=[2022, 2023, 2024, 2025]):
                 constructor = result["Constructor"]["name"]
 
                 pilots_stats[code]["carreras"] += 1
-                pilots_stats[code]["Constructor"] = constructor
+                pilots_stats[code]["constructor"] = constructor  # Corregido: minúscula en "constructor"
 
                 if pos not in ("R", "D", "W", "NC"): # Abandono o no clasificado
                     pilots_stats[code]["suma_pos"] += int(pos)
@@ -69,10 +80,16 @@ def build_dataset(seasons=[2022, 2023, 2024, 2025]):
                 "abandonos": stats["abandonos"],
                 "puntos_totales": final_points.get(code, 0.0)
             }
-            data.append(row)    
-
+            # Añadimos cada fila a la lista data
+            data.append(row)
+    
+    # Movido fuera del bucle para procesar todas las temporadas acumuladas
+    if data:
         df = pd.DataFrame(data)
         os.makedirs(PROCESSED_PATH, exist_ok=True)
         df.to_csv(os.path.join(PROCESSED_PATH, "pilots_dataset.csv"), index=False)
-        print(f"Dataset procesado guardado en data/processed/pilots_dataset.csv")
+        print(f"Dataset procesado guardado en data/processed/pilots_dataset.csv con {len(df)} filas")
         return df
+    else:
+        print("No se encontraron datos para procesar")
+        return None

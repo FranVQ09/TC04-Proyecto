@@ -3,12 +3,11 @@
     "xmlns": "",
     "series": "f1",
     "url": "https://api.jolpi.ca/ergast/f1/2023/driverstandings.json",
-    "limit": "30",
+    "limit": "22",
     "offset": "0",
     "total": "22",
     "StandingsTable": {
       "season": "2023",
-      "round": "22",
       "StandingsLists": [
         {
           "season": "2023",
