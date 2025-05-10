@@ -10,6 +10,26 @@ def load_json(filename):
     with open(os.path.join(RAW_PATH, filename), 'r') as f:
         return json.load(f)
     
+def marcar_rookies(df):
+    pilotos_2025 = df[df["temporada"] == 2025]["piloto"].unique()
+
+    rookies = []
+    for piloto in pilotos_2025:
+        temporadas_previas = df[(df["piloto"] == piloto) & (df["temporada"] < 2025)]
+        if temporadas_previas.empty:
+            # Si no hay temporadas previas, es un rookie
+            rookies.append(piloto)
+        else:
+            participacion_2024 = temporadas_previas[temporadas_previas["temporada"] == 2024]
+            if not participacion_2024.empty:
+                # Maximo 5 carreras en 2024
+                carreras_2024 = participacion_2024.iloc[0]["carreras_corridas"]
+                if carreras_2024 <= 5:
+                    rookies.append(piloto)
+    
+    df["es_rookie"] = df["piloto"].isin(rookies).astype(int)
+    return df
+    
 def build_dataset(seasons=[2022, 2023, 2024, 2025]):
     # Movemos la declaración de data fuera del bucle para acumular todas las temporadas
     data = []
@@ -86,6 +106,7 @@ def build_dataset(seasons=[2022, 2023, 2024, 2025]):
     # Movido fuera del bucle para procesar todas las temporadas acumuladas
     if data:
         df = pd.DataFrame(data)
+        df = marcar_rookies(df)
         os.makedirs(PROCESSED_PATH, exist_ok=True)
         df.to_csv(os.path.join(PROCESSED_PATH, "pilots_dataset.csv"), index=False)
         print(f"Dataset procesado guardado en data/processed/pilots_dataset.csv con {len(df)} filas")

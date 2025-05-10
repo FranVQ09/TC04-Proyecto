@@ -1,7 +1,6 @@
-# main.py
-
 from src.api import get_drivers_by_season, get_race_results_by_season, get_driver_standings
 from src.prepare_data import build_dataset
+from src.train_models import train_linear_model
 import os
 
 def file_exists(filename):
@@ -32,4 +31,8 @@ def fetch_all_data(seasons=[2022, 2023, 2024, 2025]):
 if __name__ == "__main__":
     fetch_all_data()
     print("\n Generando dataset final por piloto...")
-    build_dataset()
+    df = build_dataset()
+
+    if df is not None:
+        print("\n Entrenando modelo de regresión lineal...")
+        model = train_linear_model(df)
